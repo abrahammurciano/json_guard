@@ -1,5 +1,5 @@
 name: json_guard
-description: A starting point for Dart libraries or applications.
+description: A library for validating, transforming, and parsing JSON data. It provides a type-safe approach to working with JSON without requiring code generation or reflection.
 version: 1.0.0
 repository: https://github.com/abrahammurciano/json_guard
 environment:
