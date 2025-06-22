@@ -19,6 +19,9 @@ linter:
     - prefer_relative_imports
     - prefer_double_quotes
 
+formatter:
+  page_width: 120
+
 # analyzer:
 #   exclude:
 #     - path/to/excluded/files/**
