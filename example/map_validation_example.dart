@@ -18,8 +18,8 @@ class Weapon {
 class Starship {
   final String model;
   final int crewSize;
-  final Set<String> systems;
-  final List<Weapon> weapons;
+  final Map<String, String> systems;
+  final Map<String, Weapon> weapons;
 
   Starship({required this.model, required this.crewSize, required this.systems, required this.weapons});
 
@@ -27,14 +27,14 @@ class Starship {
     fields: [
       Field.string("model").field(),
       Field.integer("crewSize", min: 1).field(),
-      Field.string("systems").list(fallback: ["Basic"]).field(),
-      Field.nested("weapons", schema: Weapon.schema).list().field(),
+      Field.string("systems").map(fallback: {"BSC": "Basic"}).field(),
+      Field.nested("weapons", schema: Weapon.schema).map().field(),
     ],
     constructor: (data) {
       return Starship(
         model: data["model"],
         crewSize: data["crewSize"],
-        systems: Set<String>.from(data["systems"]),
+        systems: data["systems"],
         weapons: data["weapons"],
       );
     },
@@ -42,7 +42,7 @@ class Starship {
 
   @override
   String toString() {
-    final systemsStr = systems.map((s) => '"$s"').join(", ");
+    final systemsStr = systems.values.map((s) => '"$s"').join(", ");
     return "Starship(model: $model, crewSize: $crewSize, systems: [$systemsStr], weapons: $weapons)";
   }
 }
@@ -51,11 +51,11 @@ void main() {
   final millenniumFalcon = {
     "model": "YT-1300 Corellian light freighter",
     "crewSize": 4,
-    "systems": ["Hyperdrive", "Shields", "Navigation computer", "Sublight engines"],
-    "weapons": [
-      {"name": "Quad laser cannon", "damage": 10},
-      {"name": "Concussion missiles", "damage": 15},
-    ],
+    "systems": {"HDR": "Hyperdrive", "SHD": "Shields", "NAC": "Navigation computer", "SLE": "Sublight engines"},
+    "weapons": {
+      "cannons": {"name": "Quad laser cannon", "damage": 10},
+      "missiles": {"name": "Concussion missiles", "damage": 15},
+    },
   };
 
   try {
@@ -66,18 +66,18 @@ void main() {
     final invalidStarship = {
       "model": "X-wing starfighter",
       "crewSize": 1,
-      "systems": ["Hyperdrive", "Targeting computer"],
-      "weapons": [
-        {
+      "systems": {"HDR": "Hyperdrive", "TCD": "Targeting computer"},
+      "weapons": {
+        "cannons": {
           "name": "Laser cannons",
           "damage": -5, // Invalid: negative damage
         },
-      ],
+      },
     };
 
     Starship.schema.fromJson(invalidStarship);
   } catch (e) {
     print("$e");
-    // Field 'damage': Validation failed for value '-5': Must be at least 1 (at $.weapons[0].damage)
+    // Field 'damage': Validation failed for value '-5': Must be at least 1 (at $.weapons.cannons.damage)
   }
 }

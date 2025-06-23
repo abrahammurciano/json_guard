@@ -1,10 +1,10 @@
 name: json_guard
 description: A library for validating, transforming, and parsing JSON data. It provides a type-safe approach to working with JSON without requiring code generation or reflection.
-version: 1.0.0
+version: 2.0.0
 repository: https://github.com/abrahammurciano/json_guard
 environment:
   sdk: ^3.8.1
 dependencies:
 dev_dependencies:
-  lints: ^5.0.0
+  lints: ^6.0.0
   test: ^1.24.0

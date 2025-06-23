@@ -3,6 +3,7 @@ import "schema.dart" show Schema;
 import "validators/datetime_validator.dart" show DateTimeValidator;
 import "validators/enum_validator.dart" show EnumValidator;
 import "validators/integer_validator.dart" show IntegerValidator;
+import "validators/pattern_validator.dart" show PatternValidator;
 import "validators/string_validator.dart" show StringValidator, StringCase;
 
 /// Factory for creating fields with various validation rules.
@@ -148,6 +149,35 @@ abstract class Field {
       name: name,
       aliases: aliases,
       converter: schema.validate,
+      fallback: fallback,
+    );
+  }
+
+  /// Creates a field for string values that must match a regular expression pattern.
+  ///
+  /// The field will validate that the value is a string and that it matches the specified pattern.
+  /// Creates a field that converts a string value into a RegExp object.
+  ///
+  /// If [full] is true, the pattern will be anchored with ^ and $ if they are not already present.
+  /// The [multiLine], [caseSensitive], and [unicode] parameters control the RegExp options.
+  static FieldBuilder<RegExp, String> pattern(
+    String name, {
+    List<String> aliases = const [],
+    bool full = false,
+    bool multiLine = false,
+    bool caseSensitive = true,
+    bool unicode = false,
+    RegExp? fallback,
+  }) {
+    return FieldBuilder<RegExp, String>(
+      name: name,
+      aliases: aliases,
+      converter: PatternValidator(
+        full: full,
+        multiLine: multiLine,
+        caseSensitive: caseSensitive,
+        unicode: unicode,
+      ).validate,
       fallback: fallback,
     );
   }

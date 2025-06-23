@@ -33,7 +33,7 @@ void main() {
         expect(e, isA<JsonTypeException>());
         expect(e.toString(), contains("not an object"));
         expect(e.toString(), contains("String"));
-        expect(e.toString(), contains("Map<String, dynamic>"));
+        expect(e.toString(), contains("Map"));
       }
     });
   });

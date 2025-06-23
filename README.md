@@ -67,7 +67,7 @@ final jsonArray = [
   {'name': 'Bob', 'age': 35, 'bio': 'Designer'},
 ];
 
-final users = User.schema.many(jsonArray);
+final users = User.schema.list(jsonArray);
 ```
 
 ### Advanced examples
@@ -110,7 +110,7 @@ class Contact {
   final schema = Schema(
     fields: [
       Field.string('name').field(),
-      Field.string('phone_numbers').many().field(),
+      Field.string('phone_numbers').list().field(),
       Field.nested('address', schema: Address.schema).field(),
     ],
     constructor: (data) => Contact(
@@ -166,6 +166,101 @@ final json = {
 };
 
 final account = Account.schema.fromJson(json);
+```
+
+#### Maps of values
+
+```dart
+import 'package:json_guard/json_guard.dart' show Field, Schema;
+
+class Person {
+  final String name;
+  final int age;
+
+  Person({required this.name, required this.age});
+
+  static final schema = Schema<Person>(
+    fields: [
+      Field.string('name').field(),
+      Field.integer('age').field(),
+    ],
+    constructor: (data) => Person(
+      name: data['name'],
+      age: data['age'],
+    ),
+  );
+}
+
+class UserRegistry {
+  final Map<String, Person> users;
+
+  UserRegistry({required this.users});
+
+  static final schema = Schema<UserRegistry>(
+    fields: [
+      Field.nested('users', schema: Person.schema).map(fallback: const {}).field(),
+    ],
+    constructor: (data) => UserRegistry(users: data['users']),
+  );
+}
+
+// Parse a JSON object with a map of users
+final json = {
+  'users': {
+    'john_doe': {
+      'name': 'John Doe',
+      'age': 30,
+    },
+    'jane_doe': {
+      'name': 'Jane Doe',
+      'age': 28,
+    }
+  }
+};
+
+final registry = UserRegistry.schema.fromJson(json);
+print(registry.users['john_doe'].name); // John Doe
+```
+
+#### Regular Expression Patterns
+
+```dart
+import 'package:json_guard/json_guard.dart' show Field, Schema;
+
+class NamingPattern {
+  final String name;
+  final RegExp regex;
+
+  NamingPattern({required this.name, required this.regex});
+
+  bool isValid(String input) {
+    return regex.hasMatch(input);
+  }
+
+  static final schema = Schema<NamingPattern>(
+    fields: [
+      Field.string("name").field(),
+      Field.pattern(
+        "regex",
+        full: true, // Automatically adds ^ and $ anchors if not present
+        fallback: RegExp(r"[a-zA-Z][a-zA-Z0-9_]*"),
+      ).field(),
+    ],
+    constructor: (data) => NamingPattern(
+      name: data["name"],
+      regex: data["regex"], // Regex pattern from JSON string
+    ),
+  );
+}
+
+// Parse JSON containing regex patterns
+final json = {
+  "name": "PascalCase",
+  "regex": "[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]+)*",
+};
+
+final pattern = NamingPattern.schema.fromJson(json);
+print("Pattern matches 'UserAccount': ${pattern.isValid('UserAccount')}");
 ```
 
 ## Additional information
