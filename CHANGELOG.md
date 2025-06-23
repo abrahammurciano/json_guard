@@ -10,6 +10,9 @@
 - Added `map()` method to `Schema` class for processing maps of JSON objects
 - Renamed `many()` to `list()` for consistency with `map()` field types
 
+### Proper casting
+- Improved type casting for all field types to allow for more flexible JSON parsing
+
 ## 1.0.0
 
 - Initial version.
