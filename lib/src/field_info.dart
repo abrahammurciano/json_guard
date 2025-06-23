@@ -1,4 +1,10 @@
-import "exceptions.dart" show JsonTypeException, FieldMissingException, ArgumentErrorValidationException;
+import "exceptions.dart"
+    show
+        FieldMissingException,
+        ArgumentErrorValidationException,
+        JsonTypeError,
+        WrongJsonTypeException,
+        TypeErrorJsonTypeException;
 import "extensions.dart" show ExtendIterable;
 import "json_path.dart" show JsonPath;
 import "option.dart" show Option;
@@ -6,10 +12,10 @@ import "option.dart" show Option;
 /// Function type for converting a JSON value of type J to a Dart value of type T.
 ///
 /// The converter is provided with the raw value, the JSON path, and field information.
-typedef Converter<T, J> = T Function(J value, JsonPath path, FieldInfo field);
+typedef Converter<T> = T Function(dynamic value, JsonPath path, FieldInfo field);
 
 /// Defines metadata for a field in a schema, including how to extract and convert its value from JSON.
-class FieldInfo<T, J> {
+class FieldInfo<T> {
   /// The primary name of the field in the JSON.
   final String name;
 
@@ -17,7 +23,7 @@ class FieldInfo<T, J> {
   final List<String> aliases;
 
   /// Function to convert the JSON value to the target type.
-  final Converter<T, J> converter;
+  final Converter<T> converter;
 
   /// Optional fallback value to use if the field is missing.
   final Option<T> fallback;
@@ -47,13 +53,14 @@ class FieldInfo<T, J> {
     return _jsonValue(json).when(
       empty: () => _fallback(json, path),
       value: (value) {
-        if (value is! J) {
-          throw JsonTypeException(value, expected: J.toString(), field: this, path: path);
-        }
         try {
           return converter(value, path, this);
         } on ArgumentError catch (e) {
           throw ArgumentErrorValidationException(value, e.message.toString(), field: this, path: path);
+        } on TypeError catch (e) {
+          throw TypeErrorJsonTypeException(e, field: this, path: path);
+        } on JsonTypeError catch (e) {
+          throw WrongJsonTypeException(value, expected: e.expected, field: this, path: path);
         }
       },
     );

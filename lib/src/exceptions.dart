@@ -30,7 +30,12 @@ abstract class ValidationException extends JsonGuardException {
 }
 
 /// Exception thrown when JSON data is not of the expected type.
-class JsonTypeException extends ValidationException {
+abstract class JsonTypeException extends ValidationException {
+  const JsonTypeException({super.field, required super.path});
+}
+
+/// Exception thrown when JSON data is of the wrong type.
+class WrongJsonTypeException extends JsonTypeException {
   /// The expected type description.
   final String expected;
 
@@ -38,10 +43,22 @@ class JsonTypeException extends ValidationException {
   final dynamic data;
 
   /// Creates a type exception with the specified data and expected type.
-  const JsonTypeException(this.data, {required this.expected, super.field, required super.path});
+  const WrongJsonTypeException(this.data, {required this.expected, super.field, required super.path});
 
   @override
   String get message => "Expected JSON with type '$expected' but got '${data.runtimeType}' with value: $data";
+}
+
+/// Exception thrown when a TypeError occurs during JSON type conversion.
+class TypeErrorJsonTypeException extends JsonTypeException {
+  /// The expected type description.
+  final TypeError error;
+
+  /// Creates a type error exception with the specified error.
+  TypeErrorJsonTypeException(this.error, {super.field, required super.path});
+
+  @override
+  String get message => "TypeError occurred: ${error.toString()}";
 }
 
 /// Exception thrown when a required field is missing from the JSON.
@@ -84,4 +101,13 @@ class ArgumentErrorValidationException extends ValidationException {
 
   @override
   String get message => "ArgumentError raised for value '$value': $reason";
+}
+
+/// Exception for a user to throw when a JSON value is not of the expected type. It will be caught by the schema validation logic and converted to a [JsonTypeException].
+class JsonTypeError implements Exception {
+  /// The expected type description.
+  final String expected;
+
+  /// Creates a JsonTypeError with the specified value and expected type.
+  JsonTypeError(this.expected);
 }

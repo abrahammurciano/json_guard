@@ -1,3 +1,10 @@
+# Changelog
+
+## 3.0.0
+
+- Refactored conversion logic to improve type casting errors
+- Introduced new exception types for when conversion fails due to type mismatches
+
 ## 2.0.0
 
 ### RegExp fields

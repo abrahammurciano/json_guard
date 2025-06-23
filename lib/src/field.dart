@@ -1,3 +1,4 @@
+import "exceptions.dart" show WrongJsonTypeException;
 import "field_builder.dart" show FieldBuilder;
 import "schema.dart" show Schema;
 import "validators/datetime_validator.dart" show DateTimeValidator;
@@ -15,29 +16,30 @@ abstract class Field {
   /// Creates a field that accepts values of type T without conversion.
   ///
   /// Use this for simple fields where no validation or transformation is needed.
-  static FieldBuilder<T, T> plain<T>(String name, {List<String> aliases = const [], T? fallback}) {
-    return FieldBuilder<T, T>(name: name, aliases: aliases, fallback: fallback, converter: (value, _, __) => value);
+  static FieldBuilder<T> plain<T>(String name, {List<String> aliases = const [], T? fallback}) {
+    return FieldBuilder<T>(name: name, aliases: aliases, fallback: fallback, converter: (value, _, _) => value);
   }
 
   /// Creates a field with a custom conversion function.
   ///
   /// Use this to define fields with custom validation or transformation logic.
-  static FieldBuilder<T, J> custom<T, J>(
+  static FieldBuilder<T> custom<T, J>(
     String name, {
     List<String> aliases = const [],
     T Function(J)? converter,
     T? fallback,
     T Function()? fallbackBuilder,
   }) {
-    if (converter == null && T != J) {
-      throw ArgumentError("Converter must be provided if T is not the same as J.");
-    } else {
-      converter ??= (value) => value as T;
-    }
-    return FieldBuilder<T, J>(
+    converter ??= (value) => value as T;
+    return FieldBuilder<T>(
       name: name,
       aliases: aliases,
-      converter: (value, _, __) => converter!(value),
+      converter: (value, path, field) {
+        if (value is! J) {
+          throw WrongJsonTypeException(value, expected: J.toString(), field: field, path: path);
+        }
+        return converter!(value);
+      },
       fallback: fallback,
       fallbackBuilder: fallbackBuilder,
     );
@@ -47,14 +49,8 @@ abstract class Field {
   ///
   /// The field will validate that the value is an integer and optionally that it falls
   /// within the specified range.
-  static FieldBuilder<int, dynamic> integer(
-    String name, {
-    List<String> aliases = const [],
-    int? min,
-    int? max,
-    int? fallback,
-  }) {
-    return FieldBuilder<int, dynamic>(
+  static FieldBuilder<int> integer(String name, {List<String> aliases = const [], int? min, int? max, int? fallback}) {
+    return FieldBuilder<int>(
       name: name,
       aliases: aliases,
       converter: IntegerValidator(min: min, max: max).validate,
@@ -66,18 +62,19 @@ abstract class Field {
   ///
   /// The field can validate string length, pattern matching, case formatting,
   /// and more.
-  static FieldBuilder<String, dynamic> string(
+  static FieldBuilder<String> string(
     String name, {
     List<String> aliases = const [],
     int? minLength,
     int? maxLength,
     RegExp? pattern,
     bool trim = false,
+    bool coerce = false,
     Set<String>? options,
     StringCase? caseType,
     String? fallback,
   }) {
-    return FieldBuilder<String, dynamic>(
+    return FieldBuilder<String>(
       name: name,
       aliases: aliases,
       converter: StringValidator(
@@ -87,6 +84,7 @@ abstract class Field {
         trim: trim,
         options: options,
         caseType: caseType,
+        coerce: coerce,
       ).validate,
       fallback: fallback,
     );
@@ -96,7 +94,7 @@ abstract class Field {
   ///
   /// The field can parse dates from ISO8601 strings and timestamps,
   /// and validate that they fall within a specified range.
-  static FieldBuilder<DateTime, dynamic> datetime(
+  static FieldBuilder<DateTime> datetime(
     String name, {
     List<String> aliases = const [],
     DateTime? min,
@@ -105,7 +103,7 @@ abstract class Field {
     bool allowIso8601 = true,
     bool allowTimestamp = true,
   }) {
-    return FieldBuilder<DateTime, dynamic>(
+    return FieldBuilder<DateTime>(
       name: name,
       aliases: aliases,
       converter: DateTimeValidator(
@@ -121,14 +119,14 @@ abstract class Field {
   /// Creates a field for enum values mapped from strings.
   ///
   /// The field maps string values from JSON to enum values using the provided map.
-  static FieldBuilder<E, String> enumeration<E>(
+  static FieldBuilder<E> enumeration<E>(
     String name, {
     List<String> aliases = const [],
     required Map<String, E> values,
     bool caseSensitive = false,
     E? fallback,
   }) {
-    return FieldBuilder<E, String>(
+    return FieldBuilder<E>(
       name: name,
       aliases: aliases,
       converter: EnumValidator<E>(values: values, caseSensitive: caseSensitive).validate,
@@ -139,18 +137,13 @@ abstract class Field {
   /// Creates a field for nested objects that are validated using a schema.
   ///
   /// The field applies a schema to a nested JSON object to validate and transform it.
-  static FieldBuilder<T, Map<String, dynamic>> nested<T>(
+  static FieldBuilder<T> nested<T>(
     String name, {
     List<String> aliases = const [],
     required Schema<T> schema,
     T? fallback,
   }) {
-    return FieldBuilder<T, Map<String, dynamic>>(
-      name: name,
-      aliases: aliases,
-      converter: schema.validate,
-      fallback: fallback,
-    );
+    return FieldBuilder<T>(name: name, aliases: aliases, converter: schema.validate, fallback: fallback);
   }
 
   /// Creates a field for string values that must match a regular expression pattern.
@@ -160,7 +153,7 @@ abstract class Field {
   ///
   /// If [full] is true, the pattern will be anchored with ^ and $ if they are not already present.
   /// The [multiLine], [caseSensitive], and [unicode] parameters control the RegExp options.
-  static FieldBuilder<RegExp, String> pattern(
+  static FieldBuilder<RegExp> pattern(
     String name, {
     List<String> aliases = const [],
     bool full = false,
@@ -169,7 +162,7 @@ abstract class Field {
     bool unicode = false,
     RegExp? fallback,
   }) {
-    return FieldBuilder<RegExp, String>(
+    return FieldBuilder<RegExp>(
       name: name,
       aliases: aliases,
       converter: PatternValidator(
