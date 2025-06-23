@@ -52,13 +52,29 @@ class FieldBuilder<T, J> {
   ///
   /// Returns a new field builder that expects a JSON array of items
   /// and applies the original converter to each item.
-  FieldBuilder<List<T>, List<J>> many({List<T>? fallback}) {
+  FieldBuilder<List<T>, List<J>> list({List<T>? fallback}) {
     return FieldBuilder<List<T>, List<J>>(
       name: name,
       aliases: aliases,
       converter: (value, path, field) => [
         for (final (index, item) in value.indexed) converter(item, path[index], field),
       ],
+      fallback: fallback,
+      isOptional: isOptional,
+    );
+  }
+
+  /// Makes the field a map of values of the original type.
+  ///
+  /// Returns a new field builder that expects a JSON object mapping
+  /// and applies the original converter to each value.
+  FieldBuilder<Map<String, T>, Map<String, J>> map({Map<String, T>? fallback}) {
+    return FieldBuilder<Map<String, T>, Map<String, J>>(
+      name: name,
+      aliases: aliases,
+      converter: (value, path, field) => {
+        for (final entry in value.entries) entry.key: converter(entry.value, path / entry.key, field),
+      },
       fallback: fallback,
       isOptional: isOptional,
     );

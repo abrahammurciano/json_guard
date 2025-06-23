@@ -22,11 +22,21 @@ class Schema<T> {
   /// Validates and converts a list of JSON objects to a list of type T.
   ///
   /// Throws a [JsonTypeException] if the input is not a list.
-  List<T> many(dynamic json) {
+  List<T> list(dynamic json) {
     if (json is! List) {
       throw JsonTypeException(json, expected: "List<dynamic>", path: JsonPath.root());
     }
     return [for (final (index, item) in json.indexed) validate(item, JsonPath.root()[index])];
+  }
+
+  /// Validates and converts a map of JSON objects to a map of type T.
+  ///
+  /// Throws a [JsonTypeException] if the input is not a map.
+  Map<String, T> map(dynamic json) {
+    if (json is! Map<String, dynamic>) {
+      throw JsonTypeException(json, expected: "Map<String, dynamic>", path: JsonPath.root());
+    }
+    return {for (final entry in json.entries) entry.key: validate(entry.value, JsonPath.root() / entry.key)};
   }
 
   /// Validates a JSON object against this schema and constructs an instance of T.

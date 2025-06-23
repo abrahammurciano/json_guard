@@ -132,10 +132,10 @@ Field.nested(
 
 ```dart
 // For a list of strings
-Field.string("tags").many().field()
+Field.string("tags").list().field()
 
 // For a list of nested objects
-Field.nested("items", schema: Item.schema).many().field()
+Field.nested("items", schema: Item.schema).list().field()
 ```
 
 ## Field Options
@@ -145,7 +145,8 @@ All field types support these options:
 - **aliases**: Alternative field names to look for in the JSON
 - **fallback**: Default value if the field is missing
 - **optional()**: Mark a field as optional (can be null)
-- **many()**: Indicates that the field can contain multiple values (list)
+- **list()**: Indicates that the field can contain multiple values
+- **map()**: Indicates that the field is a map of key-value pairs
 
 ```dart
 Field.string("name", aliases: ["fullName", "userName"]).field()

@@ -447,7 +447,7 @@ void main() {
   group("List field validations", () {
     test("validates lists of primitives", () {
       final schema = Schema<Map<String, dynamic>>(
-        fields: [Field.string("name").field(), Field.string("powers").many().field()],
+        fields: [Field.string("name").field(), Field.string("powers").list().field()],
         constructor: (data) => data,
       );
 
@@ -470,7 +470,7 @@ void main() {
       final schema = Schema<Map<String, dynamic>>(
         fields: [
           Field.string("name").field(),
-          Field.nested("weapons", schema: weaponSchema).many().field(),
+          Field.nested("weapons", schema: weaponSchema).list().field(),
         ],
         constructor: (data) => data,
       );
@@ -492,7 +492,7 @@ void main() {
 
     test("validates list item constraints", () {
       final schema = Schema<Map<String, dynamic>>(
-        fields: [Field.string("name").field(), Field.integer("scores").many().field()],
+        fields: [Field.string("name").field(), Field.integer("scores").list().field()],
         constructor: (data) => data,
       );
 
@@ -689,7 +689,7 @@ void main() {
     });
   });
 
-  group("Schema.many tests", () {
+  group("Schema.list tests", () {
     test("validates a list of JSON objects", () {
       final schema = Schema<SimpleTest>(
         fields: [Field.string("name").field(), Field.integer("age").field()],
@@ -702,7 +702,7 @@ void main() {
         {"name": "Han Solo", "age": 32},
       ];
 
-      final results = schema.many(jsonList);
+      final results = schema.list(jsonList);
 
       expect(results.length, equals(3));
       expect(results[0].name, equals("Luke Skywalker"));
@@ -726,7 +726,7 @@ void main() {
       ];
 
       try {
-        schema.many(jsonList);
+        schema.list(jsonList);
         fail("Should have thrown JsonTypeException");
       } on JsonTypeException catch (e) {
         expect(e.data, equals("not a map"));
@@ -747,7 +747,7 @@ void main() {
       ];
 
       try {
-        schema.many(jsonList);
+        schema.list(jsonList);
         fail("Should have thrown FieldMissingException");
       } on FieldMissingException catch (e) {
         expect(e.field?.name, equals("age"));
@@ -768,7 +768,7 @@ void main() {
       ];
 
       try {
-        schema.many(jsonList);
+        schema.list(jsonList);
         fail("Should have thrown ValueValidationException");
       } on ValueValidationException catch (e) {
         expect(e.value, equals(5));
@@ -802,7 +802,7 @@ void main() {
       ];
 
       try {
-        schema.many(jsonList);
+        schema.list(jsonList);
         fail("Should have thrown ArgumentErrorValidationException");
       } on ArgumentErrorValidationException catch (e) {
         expect(e.value, equals("DV-456"));
@@ -831,7 +831,7 @@ void main() {
       ];
 
       try {
-        schema.many(jsonList);
+        schema.list(jsonList);
         fail("Should have thrown ArgumentErrorValidationException");
       } on ArgumentErrorValidationException catch (e) {
         expect(e.value, equals({"name": "Clone", "age": -5}));
