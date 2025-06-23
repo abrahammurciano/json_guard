@@ -1,4 +1,4 @@
-import "../exceptions.dart" show ValueValidationException;
+import "../exceptions.dart" show ValueValidationException, WrongJsonTypeException;
 import "../field_info.dart" show FieldInfo;
 import "../json_path.dart" show JsonPath;
 
@@ -10,7 +10,10 @@ class PatternValidator {
 
   PatternValidator({this.full = false, this.multiLine = false, this.caseSensitive = true, this.unicode = false});
 
-  RegExp validate(String value, JsonPath path, FieldInfo field) {
+  RegExp validate(dynamic value, JsonPath path, FieldInfo field) {
+    if (value is! String) {
+      throw WrongJsonTypeException(value, expected: "String", field: field, path: path);
+    }
     try {
       return RegExp(_withAnchors(value), multiLine: multiLine, caseSensitive: caseSensitive, unicode: unicode);
     } catch (e) {

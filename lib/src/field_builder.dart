@@ -1,3 +1,4 @@
+import "exceptions.dart" show WrongJsonTypeException;
 import "field_info.dart" show FieldInfo, Converter;
 import "option.dart" show Option;
 
@@ -5,7 +6,7 @@ import "option.dart" show Option;
 ///
 /// This class allows for chaining methods to create complex field definitions.
 /// It supports defining optional fields and list fields as variations of existing fields.
-class FieldBuilder<T, J> {
+class FieldBuilder<T> {
   /// The primary name of the field in the JSON.
   final String name;
 
@@ -13,7 +14,7 @@ class FieldBuilder<T, J> {
   final List<String> aliases;
 
   /// Function to convert the JSON value to the target type.
-  final Converter<T, J> converter;
+  final Converter<T> converter;
 
   /// Optional fallback value to use if the field is missing.
   final T? fallback;
@@ -37,8 +38,8 @@ class FieldBuilder<T, J> {
   /// Makes the field optional, allowing null values.
   ///
   /// Returns a new field builder that accepts null values for the field.
-  FieldBuilder<T?, J?> optional() {
-    return FieldBuilder<T?, J?>(
+  FieldBuilder<T?> optional() {
+    return FieldBuilder<T?>(
       name: name,
       aliases: aliases,
       converter: (value, path, field) => value == null ? null : converter(value, path, field),
@@ -52,13 +53,16 @@ class FieldBuilder<T, J> {
   ///
   /// Returns a new field builder that expects a JSON array of items
   /// and applies the original converter to each item.
-  FieldBuilder<List<T>, List<J>> list({List<T>? fallback}) {
-    return FieldBuilder<List<T>, List<J>>(
+  FieldBuilder<List<T>> list({List<T>? fallback}) {
+    return FieldBuilder<List<T>>(
       name: name,
       aliases: aliases,
-      converter: (value, path, field) => [
-        for (final (index, item) in value.indexed) converter(item, path[index], field),
-      ],
+      converter: (value, path, field) {
+        if (value is! Iterable) {
+          throw WrongJsonTypeException(value, expected: "Iterable", field: field, path: path);
+        }
+        return [for (final (index, item) in value.indexed) converter(item, path[index], field)];
+      },
       fallback: fallback,
       isOptional: isOptional,
     );
@@ -68,12 +72,18 @@ class FieldBuilder<T, J> {
   ///
   /// Returns a new field builder that expects a JSON object mapping
   /// and applies the original converter to each value.
-  FieldBuilder<Map<String, T>, Map<String, J>> map({Map<String, T>? fallback}) {
-    return FieldBuilder<Map<String, T>, Map<String, J>>(
+  FieldBuilder<Map<String, T>> map({Map<String, T>? fallback}) {
+    return FieldBuilder<Map<String, T>>(
       name: name,
       aliases: aliases,
-      converter: (value, path, field) => {
-        for (final entry in value.entries) entry.key: converter(entry.value, path / entry.key, field),
+      converter: (value, path, field) {
+        if (value is! Map) {
+          throw WrongJsonTypeException(value, expected: "Map", field: field, path: path);
+        }
+        return {
+          for (final entry in Map<String, dynamic>.from(value).entries)
+            entry.key: converter(entry.value, path / entry.key, field),
+        };
       },
       fallback: fallback,
       isOptional: isOptional,
@@ -83,8 +93,8 @@ class FieldBuilder<T, J> {
   /// Creates a FieldInfo instance from this builder.
   ///
   /// This finalizes the field definition for use in a schema.
-  FieldInfo<T, J> field() {
-    return FieldInfo<T, J>(
+  FieldInfo<T> field() {
+    return FieldInfo<T>(
       name,
       aliases: aliases,
       converter: converter,

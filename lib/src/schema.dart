@@ -1,4 +1,4 @@
-import "exceptions.dart" show JsonTypeException, ArgumentErrorValidationException;
+import "exceptions.dart" show JsonTypeException, ArgumentErrorValidationException, WrongJsonTypeException;
 import "field_info.dart" show FieldInfo;
 import "json_path.dart" show JsonPath;
 
@@ -24,7 +24,7 @@ class Schema<T> {
   /// Throws a [JsonTypeException] if the input is not a list.
   List<T> list(dynamic json) {
     if (json is! Iterable || json is String) {
-      throw JsonTypeException(json, expected: "Iterable (other than String)", path: JsonPath.root());
+      throw WrongJsonTypeException(json, expected: "Iterable (other than String)", path: JsonPath.root());
     }
     return [for (final (index, item) in json.indexed) validate(item, JsonPath.root()[index])];
   }
@@ -34,30 +34,30 @@ class Schema<T> {
   /// Throws a [JsonTypeException] if the input is not a map.
   Map<String, T> map(dynamic json) {
     if (json is! Map) {
-      throw JsonTypeException(json, expected: "Map", path: JsonPath.root());
+      throw WrongJsonTypeException(json, expected: "Map", path: JsonPath.root());
     }
     late final Map<String, dynamic> jsonMap;
     try {
       jsonMap = json.cast<String, dynamic>();
     } catch (e) {
-      throw JsonTypeException(jsonMap, expected: "Map<String, dynamic>", path: JsonPath.root());
+      throw WrongJsonTypeException(jsonMap, expected: "Map<String, dynamic>", path: JsonPath.root());
     }
     return {for (final entry in jsonMap.entries) entry.key: validate(entry.value, JsonPath.root() / entry.key)};
   }
 
   /// Validates a JSON object against this schema and constructs an instance of T.
   ///
-  /// Throws [JsonTypeException] if the input is not a [Map<String, dynamic>].
+  /// Throws [WrongJsonTypeException] if the input is not a [Map<String, dynamic>].
   /// Throws [ArgumentErrorValidationException] if the constructor raises an ArgumentError.
   T validate(dynamic json, [JsonPath path = const JsonPath.root(), FieldInfo? field]) {
     if (json is! Map) {
-      throw JsonTypeException(json, expected: "Map", path: path);
+      throw WrongJsonTypeException(json, expected: "Map", path: path);
     }
     late final Map<String, dynamic> jsonMap;
     try {
       jsonMap = json.cast<String, dynamic>();
     } catch (e) {
-      throw JsonTypeException(jsonMap, expected: "Map<String, dynamic>", path: path);
+      throw WrongJsonTypeException(jsonMap, expected: "Map<String, dynamic>", path: path);
     }
     final data = {for (final field in fields) field.name: field.value(jsonMap, path / field.name)};
 

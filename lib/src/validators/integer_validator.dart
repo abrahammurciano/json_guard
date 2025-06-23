@@ -1,4 +1,4 @@
-import "../exceptions.dart" show JsonTypeException, ValueValidationException;
+import "../exceptions.dart" show ValueValidationException, WrongJsonTypeException;
 import "../field_info.dart" show FieldInfo;
 import "../json_path.dart" show JsonPath;
 
@@ -30,7 +30,7 @@ class IntegerValidator {
       int() => value,
       double() => value.floor(),
       String() => _parseString(value, path, field),
-      _ => throw JsonTypeException(value, expected: "int, double, or String", field: field, path: path),
+      _ => throw WrongJsonTypeException(value, expected: "int, double, or String", field: field, path: path),
     };
   }
 

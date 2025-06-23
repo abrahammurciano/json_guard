@@ -1,4 +1,4 @@
-import "../exceptions.dart" show ValueValidationException;
+import "../exceptions.dart" show ValueValidationException, WrongJsonTypeException;
 import "../field_info.dart" show FieldInfo;
 import "../json_path.dart" show JsonPath;
 
@@ -24,7 +24,10 @@ class EnumValidator<E> {
   ///
   /// Throws a [ValueValidationException] if the string doesn't match any
   /// of the allowed values.
-  E validate(String value, JsonPath path, FieldInfo field) {
+  E validate(dynamic value, JsonPath path, FieldInfo field) {
+    if (value is! String) {
+      throw WrongJsonTypeException(value, expected: "String", field: field, path: path);
+    }
     final result = values[caseSensitive ? value : value.toLowerCase()];
     if (result == null) {
       throw ValueValidationException(

@@ -1,4 +1,4 @@
-import "../exceptions.dart" show ValueValidationException;
+import "../exceptions.dart" show ValueValidationException, WrongJsonTypeException;
 import "../field_info.dart" show FieldInfo;
 import "../json_path.dart" show JsonPath;
 
@@ -42,13 +42,27 @@ class StringValidator {
   /// The case to convert the string to, if any.
   final StringCase? caseType;
 
+  /// Whether to coerce the value to a string if it's not already.
+  final bool coerce;
+
   /// Creates a string validator with the specified constraints.
-  StringValidator({this.minLength, this.maxLength, this.pattern, this.trim = false, this.options, this.caseType});
+  StringValidator({
+    this.minLength,
+    this.maxLength,
+    this.pattern,
+    this.trim = false,
+    this.options,
+    this.caseType,
+    this.coerce = false,
+  });
 
   /// Validates and converts a value to a string.
   ///
   /// Throws a [ValueValidationException] if the value doesn't meet the constraints.
   String validate(dynamic value, JsonPath path, FieldInfo field) {
+    if (!coerce && value is! String) {
+      throw WrongJsonTypeException(value, expected: "String", field: field, path: path);
+    }
     return _checkConstraints(value.toString(), path, field);
   }
 
