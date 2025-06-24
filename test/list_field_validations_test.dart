@@ -1,13 +1,10 @@
-import "package:json_guard/json_guard.dart" show Field, Schema, ValueValidationException;
+import "package:json_guard/json_guard.dart" show Field, Schema, ValidationException;
 import "package:test/test.dart" show TypeMatcher, equals, expect, group, test, throwsA;
 
 void main() {
   group("List field validations", () {
     test("validates lists of primitives", () {
-      final schema = Schema<Map<String, dynamic>>(
-        fields: [Field.string("name").field(), Field.string("powers").list().field()],
-        constructor: (data) => data,
-      );
+      final schema = Schema(fields: [Field.string("name"), Field.string("powers").list()], constructor: (data) => data);
 
       final data = {
         "name": "Luke Skywalker",
@@ -20,15 +17,12 @@ void main() {
     });
 
     test("validates lists of complex objects", () {
-      final weaponSchema = Schema<Map<String, dynamic>>(
-        fields: [Field.string("name").field(), Field.integer("damage").field()],
-        constructor: (data) => data,
-      );
+      final weaponSchema = Schema(fields: [Field.string("name"), Field.integer("damage")], constructor: (data) => data);
 
-      final schema = Schema<Map<String, dynamic>>(
+      final schema = Schema(
         fields: [
-          Field.string("name").field(),
-          Field.nested("weapons", schema: weaponSchema).list().field(),
+          Field.string("name"),
+          Field.nested("weapons", schema: weaponSchema).list(),
         ],
         constructor: (data) => data,
       );
@@ -49,8 +43,8 @@ void main() {
     });
 
     test("validates list item constraints", () {
-      final schema = Schema<Map<String, dynamic>>(
-        fields: [Field.string("name").field(), Field.integer("scores").list().field()],
+      final schema = Schema(
+        fields: [Field.string("name"), Field.integer("scores").list()],
         constructor: (data) => data,
       );
 
@@ -65,7 +59,7 @@ void main() {
       };
 
       expect(schema.fromJson(validData)["scores"], equals([10, 20, 30]));
-      expect(() => schema.fromJson(invalidData), throwsA(TypeMatcher<ValueValidationException>()));
+      expect(() => schema.fromJson(invalidData), throwsA(TypeMatcher<ValidationException>()));
     });
   });
 }

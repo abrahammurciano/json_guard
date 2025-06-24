@@ -1,5 +1,21 @@
 # Changelog
 
+## 4.0.0
+
+### Error Handling
+- Consolidated all error types into a single `ValidationException` class
+- Improved error messages with consistent format that includes path, value, type, and message
+
+### Standalone Validator API
+- Exposed `Validator` class for direct use without requiring Field or Schema
+- Added methods to create and use validators for individual values
+- Added support for chaining validators with `optional()`, `list()`, and `map()` methods
+
+### API Improvements
+- Enhanced type safety throughout the validation pipeline
+- Improved error context and path tracking for nested validations
+- Removed the need to finalize fields with `.field()` when creating a schema
+
 ## 3.0.0
 
 - Refactored conversion logic to improve type casting errors

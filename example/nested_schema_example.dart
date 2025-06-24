@@ -6,8 +6,8 @@ class Coordinates {
 
   Coordinates({required this.x, required this.y});
 
-  static final schema = Schema<Coordinates>(
-    fields: [Field.integer("x").field(), Field.integer("y").field()],
+  static final schema = Schema(
+    fields: [Field.integer("x"), Field.integer("y")],
     constructor: (data) => Coordinates(x: data["x"], y: data["y"]),
   );
 
@@ -22,11 +22,11 @@ class StarSystem {
 
   StarSystem({required this.name, required this.planets, required this.location});
 
-  static final schema = Schema<StarSystem>(
+  static final schema = Schema(
     fields: [
-      Field.string("name", minLength: 3).field(),
-      Field.integer("planets", min: 0).field(),
-      Field.nested("location", schema: Coordinates.schema).field(),
+      Field.string("name", minLength: 3),
+      Field.integer("planets", min: 0),
+      Field.nested("location", schema: Coordinates.schema),
     ],
     constructor: (data) => StarSystem(name: data["name"], planets: data["planets"], location: data["location"]),
   );
@@ -71,6 +71,6 @@ void main() {
     StarSystem.schema.fromJson(invalidSystem);
   } catch (e) {
     print("$e");
-    // Field 'location.x': Validation failed for value 'invalid': Failed to parse integer (at $.location.x)
+    // Validation error at $.location.x (value: invalid, type: String): Failed to parse integer
   }
 }

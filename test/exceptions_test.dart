@@ -1,28 +1,18 @@
-import "package:json_guard/json_guard.dart"
-    show
-        Field,
-        JsonTypeException,
-        Schema,
-        ValueValidationException,
-        ArgumentErrorValidationException,
-        ValidationException;
-import "package:test/test.dart" show equals, contains, expect, fail, group, isA, isNull, test;
+import "package:json_guard/json_guard.dart" show Field, Schema, ValidationException;
+import "package:test/test.dart" show equals, contains, expect, fail, group, isA, test;
 
 import "test_utils.dart" show TestModel;
 
 void main() {
   group("ValidationException", () {
     test("includes error details", () {
-      final schema = Schema<Map<String, dynamic>>(
-        fields: [Field.integer("age", min: 18).field()],
-        constructor: (data) => data,
-      );
+      final schema = Schema(fields: [Field.integer("age", min: 18)], constructor: (data) => data);
 
       try {
         schema.fromJson({"age": 15});
         fail("Should have thrown exception");
       } catch (e) {
-        expect(e, isA<ValueValidationException>());
+        expect(e, isA<ValidationException>());
         expect(e.toString(), contains("15"));
         expect(e.toString(), contains("at least"));
         expect(e.toString(), contains("18"));
@@ -31,15 +21,12 @@ void main() {
     });
 
     test("error indicates path in nested objects", () {
-      final addressSchema = Schema<Map<String, dynamic>>(
-        fields: [Field.integer("zip").field()],
-        constructor: (data) => data,
-      );
+      final addressSchema = Schema(fields: [Field.integer("zip")], constructor: (data) => data);
 
-      final personSchema = Schema<Map<String, dynamic>>(
+      final personSchema = Schema(
         fields: [
-          Field.string("name").field(),
-          Field.nested("address", schema: addressSchema).field(),
+          Field.string("name"),
+          Field.nested("address", schema: addressSchema),
         ],
         constructor: (data) => data,
       );
@@ -57,53 +44,41 @@ void main() {
         expect(e.toString(), contains("\$.address.zip"));
       }
     });
-  });
 
-  group("JsonTypeException", () {
     test("thrown for incorrect JSON type", () {
-      final schema = Schema<Map<String, dynamic>>(fields: [Field.string("name").field()], constructor: (data) => data);
+      final schema = Schema(fields: [Field.string("name")], constructor: (data) => data);
 
       try {
         schema.fromJson("not an object");
         fail("Should have thrown exception");
       } catch (e) {
-        expect(e, isA<JsonTypeException>());
+        expect(e, isA<ValidationException>());
         expect(e.toString(), contains("not an object"));
         expect(e.toString(), contains("String"));
         expect(e.toString(), contains("Map"));
       }
     });
-  });
 
-  group("FieldMissingException", () {
     test("thrown for missing required field", () {
       // Create a schema with fields but no fallbacks
-      final schema = Schema<Map<String, dynamic>>(
-        fields: [Field.string("name").field(), Field.integer("age").field()],
-        constructor: (data) => data,
-      );
+      final schema = Schema(fields: [Field.string("name"), Field.integer("age")], constructor: (data) => data);
 
       try {
         schema.fromJson({"name": "Luke Skywalker"});
         fail("Should have thrown exception");
       } catch (e) {
-        expect(e.toString(), contains("missing"));
+        expect(e.toString(), contains("Missing required field"));
       }
     });
-  });
 
-  group("ValueValidationException", () {
     test("thrown for constraint violations", () {
-      final schema = Schema<Map<String, dynamic>>(
-        fields: [Field.string("name", minLength: 5).field()],
-        constructor: (data) => data,
-      );
+      final schema = Schema(fields: [Field.string("name", minLength: 5)], constructor: (data) => data);
 
       try {
         schema.fromJson({"name": "Luke"});
         fail("Should have thrown exception");
       } catch (e) {
-        expect(e, isA<ValueValidationException>());
+        expect(e, isA<ValidationException>());
         expect(e.toString(), contains("Luke"));
         expect(e.toString(), contains("length"));
         expect(e.toString(), contains("name"));
@@ -111,15 +86,12 @@ void main() {
     });
 
     test("error indicates path in nested objects", () {
-      final addressSchema = Schema<Map<String, dynamic>>(
-        fields: [Field.integer("zip", min: 10000, max: 99999).field()],
-        constructor: (data) => data,
-      );
+      final addressSchema = Schema(fields: [Field.integer("zip", min: 10000, max: 99999)], constructor: (data) => data);
 
-      final personSchema = Schema<Map<String, dynamic>>(
+      final personSchema = Schema(
         fields: [
-          Field.string("name").field(),
-          Field.nested("address", schema: addressSchema).field(),
+          Field.string("name"),
+          Field.nested("address", schema: addressSchema),
         ],
         constructor: (data) => data,
       );
@@ -133,30 +105,31 @@ void main() {
         });
         fail("Should have thrown exception");
       } catch (e) {
-        expect(e, isA<ValueValidationException>());
+        expect(e, isA<ValidationException>());
         expect(e.toString(), contains("123"));
         expect(e.toString(), contains("at least 10000"));
         expect(e.toString(), contains("address.zip"));
       }
     });
+
     test("thrown for incorrect value type", () {
-      final schema = Schema<Map<String, dynamic>>(fields: [Field.integer("age").field()], constructor: (data) => data);
+      final schema = Schema(fields: [Field.integer("age")], constructor: (data) => data);
 
       try {
         schema.fromJson({"age": "not a number"});
         fail("Should have thrown exception");
       } catch (e) {
-        expect(e, isA<ValueValidationException>());
+        expect(e, isA<ValidationException>());
         expect(e.toString(), contains("age"));
       }
     });
   });
 
-  group("ArgumentErrorValidationException tests", () {
+  group("ArgumentError conversion", () {
     test("captures field converter ArgumentError with correct information", () {
-      final schema = Schema<Map<String, dynamic>>(
+      final schema = Schema(
         fields: [
-          Field.string("name").field(),
+          Field.string("name"),
           Field.custom<int, String>(
             "code",
             converter: (value) {
@@ -165,7 +138,7 @@ void main() {
               }
               return int.parse(value.substring(3));
             },
-          ).field(),
+          ),
         ],
         constructor: (data) => data,
       );
@@ -175,19 +148,16 @@ void main() {
       try {
         schema.fromJson(invalidData);
         fail("Should have thrown ArgumentErrorValidationException");
-      } on ArgumentErrorValidationException catch (e) {
-        expect(e.value, equals("ABC-123"));
-        expect(e.reason, equals("Code must start with SW-"));
-        expect(e.field?.name, equals("code"));
-        expect(e.path.toString(), equals("\$.code"));
-        expect(e.toString(), contains("Field 'code'"));
+      } on ValidationException catch (e) {
+        expect(e.toString(), contains("ABC-123"));
         expect(e.toString(), contains("Code must start with SW-"));
+        expect(e.path.toString(), equals("\$.code"));
       }
     });
 
     test("captures schema constructor ArgumentError with correct information", () {
-      final schema = Schema<TestModel>(
-        fields: [Field.string("name").field(), Field.integer("age").field()],
+      final schema = Schema(
+        fields: [Field.string("name"), Field.integer("age")],
         constructor: (data) {
           final age = data["age"] as int;
           if (age < 0) {
@@ -202,10 +172,9 @@ void main() {
       try {
         schema.fromJson(invalidData);
         fail("Should have thrown ArgumentErrorValidationException");
-      } on ArgumentErrorValidationException catch (e) {
-        expect(e.value, equals(invalidData));
-        expect(e.reason, equals("Age cannot be negative"));
-        expect(e.field, isNull);
+      } on ValidationException catch (e) {
+        expect(e.toString(), contains(invalidData.toString()));
+        expect(e.toString(), contains("Age cannot be negative"));
         expect(e.path.toString(), equals("\$"));
         expect(e.toString(), contains("Age cannot be negative"));
         expect(e.toString(), contains("at \$"));
@@ -213,7 +182,7 @@ void main() {
     });
 
     test("captures ArgumentError in nested schema with correct path", () {
-      final nestedSchema = Schema<Map<String, dynamic>>(
+      final nestedSchema = Schema(
         fields: [
           Field.custom<int, String>(
             "id",
@@ -223,13 +192,13 @@ void main() {
               }
               return int.parse(value);
             },
-          ).field(),
+          ),
         ],
         constructor: (data) => data,
       );
 
-      final parentSchema = Schema<Map<String, dynamic>>(
-        fields: [Field.nested<Map<String, dynamic>>("user", schema: nestedSchema).field()],
+      final parentSchema = Schema(
+        fields: [Field.nested("user", schema: nestedSchema)],
         constructor: (data) => data,
       );
 
@@ -240,11 +209,73 @@ void main() {
       try {
         parentSchema.fromJson(invalidData);
         fail("Should have thrown ArgumentErrorValidationException");
-      } on ArgumentErrorValidationException catch (e) {
-        expect(e.value, equals("12"));
-        expect(e.reason, equals("ID must be at least 3 characters"));
-        expect(e.field?.name, equals("id"));
+      } on ValidationException catch (e) {
+        expect(e.toString(), contains("12"));
+        expect(e.toString(), contains("ID must be at least 3 characters"));
+        expect(e.toString(), contains("id"));
         expect(e.path.toString(), equals("\$.user.id"));
+      }
+    });
+  });
+
+  group("TypeError conversion", () {
+    test("converts TypeError from cast in converter to ValidationException", () {
+      final schema = Schema(
+        fields: [Field.custom<int, dynamic>("value", converter: (value) => (value as String).length)],
+        constructor: (data) => data,
+      );
+
+      try {
+        schema.fromJson({"value": 42});
+        fail("Should have thrown ValidationException");
+      } on ValidationException catch (e) {
+        expect(e.toString(), contains("type 'int' is not a subtype of type 'String'"));
+        expect(e.toString(), contains("value"));
+        expect(e.path.toString(), equals("\$.value"));
+      }
+    });
+
+    test("converts TypeError from cast in constructor to ValidationException", () {
+      final schema = Schema(
+        fields: [Field.string("name"), Field.string("data")],
+        constructor: (data) {
+          return TestModel(name: data["name"], age: (data["data"] as Map<String, dynamic>)["age"]);
+        },
+      );
+
+      try {
+        schema.fromJson({"name": "Luke", "data": "not a map"});
+        fail("Should have thrown ValidationException");
+      } on ValidationException catch (e) {
+        expect(e.toString(), contains("type 'String' is not a subtype of type 'Map<String, dynamic>'"));
+        expect(e.path.toString(), equals("\$"));
+      }
+    });
+
+    test("converts TypeError in nested schema cast with correct path", () {
+      final nestedSchema = Schema(
+        fields: [Field.custom<int, dynamic>("config", converter: (value) => (value as List<dynamic>)[0])],
+        constructor: (data) => data,
+      );
+
+      final parentSchema = Schema(
+        fields: [Field.nested("user", schema: nestedSchema)],
+        constructor: (data) => data,
+      );
+
+      final invalidData = {
+        "user": {
+          "config": {"not": "a list"},
+        },
+      };
+
+      try {
+        parentSchema.fromJson(invalidData);
+        fail("Should have thrown ValidationException");
+      } on ValidationException catch (e) {
+        expect(e.toString(), contains("type '_Map<String, String>' is not a subtype of type 'List<dynamic>'"));
+        expect(e.toString(), contains("config"));
+        expect(e.path.toString(), equals("\$.user.config"));
       }
     });
   });

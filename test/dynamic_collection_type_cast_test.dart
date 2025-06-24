@@ -1,14 +1,10 @@
-import "package:json_guard/json_guard.dart" show Field, Schema;
-import "package:json_guard/json_guard.dart" show JsonTypeException;
+import "package:json_guard/json_guard.dart" show Field, Schema, ValidationException;
 import "package:test/test.dart" show equals, expect, group, test, throwsA, TypeMatcher;
 
 void main() {
   group("Empty dynamic collection handling", () {
     test("accepts empty dynamic list for typed List field", () {
-      final schema = Schema<Map<String, dynamic>>(
-        fields: [Field.string("name").field(), Field.string("tags").list().field()],
-        constructor: (data) => data,
-      );
+      final schema = Schema(fields: [Field.string("name"), Field.string("tags").list()], constructor: (data) => data);
 
       final data = {"name": "Test Item", "tags": <dynamic>[]};
 
@@ -18,10 +14,7 @@ void main() {
     });
 
     test("accepts empty dynamic map for typed Map field", () {
-      final schema = Schema<Map<String, dynamic>>(
-        fields: [Field.string("name").field(), Field.integer("scores").map().field()],
-        constructor: (data) => data,
-      );
+      final schema = Schema(fields: [Field.string("name"), Field.integer("scores").map()], constructor: (data) => data);
 
       final data = {"name": "Test Item", "scores": <dynamic, dynamic>{}};
 
@@ -31,15 +24,15 @@ void main() {
     });
 
     test("nested schema handles empty dynamic collections", () {
-      final itemSchema = Schema<Map<String, dynamic>>(
-        fields: [Field.string("name").field(), Field.string("category").list().field()],
+      final itemSchema = Schema(
+        fields: [Field.string("name"), Field.string("category").list()],
         constructor: (data) => data,
       );
 
-      final schema = Schema<Map<String, dynamic>>(
+      final schema = Schema(
         fields: [
-          Field.string("title").field(),
-          Field.nested("item", schema: itemSchema).field(),
+          Field.string("title"),
+          Field.nested("item", schema: itemSchema),
         ],
         constructor: (data) => data,
       );
@@ -56,16 +49,13 @@ void main() {
     });
 
     test("rejects non-empty lists with incorrect element type", () {
-      final schema = Schema<Map<String, dynamic>>(
-        fields: [Field.string("tags").list().field()],
-        constructor: (data) => data,
-      );
+      final schema = Schema(fields: [Field.string("tags").list()], constructor: (data) => data);
 
       final data = {
         "tags": [1, 2, 3],
       };
 
-      expect(() => schema.fromJson(data), throwsA(TypeMatcher<JsonTypeException>()));
+      expect(() => schema.fromJson(data), throwsA(TypeMatcher<ValidationException>()));
     });
   });
 }

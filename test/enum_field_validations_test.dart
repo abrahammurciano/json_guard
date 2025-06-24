@@ -1,4 +1,4 @@
-import "package:json_guard/json_guard.dart" show Field, Schema, ValueValidationException;
+import "package:json_guard/json_guard.dart" show Field, Schema, ValidationException;
 import "package:test/test.dart" show TypeMatcher, equals, expect, group, test, throwsA;
 
 import "test_utils.dart" show TestEnum;
@@ -6,12 +6,12 @@ import "test_utils.dart" show TestEnum;
 void main() {
   group("Enum field validations", () {
     test("maps string values to enum values", () {
-      final schema = Schema<Map<String, dynamic>>(
+      final schema = Schema(
         fields: [
-          Field.enumeration<TestEnum>(
+          Field.enumeration(
             "side",
             values: {"light": TestEnum.light, "dark": TestEnum.dark, "neutral": TestEnum.neutral},
-          ).field(),
+          ),
         ],
         constructor: (data) => data,
       );
@@ -23,13 +23,9 @@ void main() {
     });
 
     test("handles case sensitivity", () {
-      final schema = Schema<Map<String, dynamic>>(
+      final schema = Schema(
         fields: [
-          Field.enumeration<TestEnum>(
-            "side",
-            values: {"light": TestEnum.light, "dark": TestEnum.dark},
-            caseSensitive: true,
-          ).field(),
+          Field.enumeration("side", values: {"light": TestEnum.light, "dark": TestEnum.dark}, caseSensitive: true),
         ],
         constructor: (data) => data,
       );
@@ -38,17 +34,13 @@ void main() {
       final invalidData = {"side": "LIGHT"};
 
       expect(schema.fromJson(validData)["side"], equals(TestEnum.light));
-      expect(() => schema.fromJson(invalidData), throwsA(TypeMatcher<ValueValidationException>()));
+      expect(() => schema.fromJson(invalidData), throwsA(TypeMatcher<ValidationException>()));
     });
 
     test("handles case insensitivity", () {
-      final schema = Schema<Map<String, dynamic>>(
+      final schema = Schema(
         fields: [
-          Field.enumeration<TestEnum>(
-            "side",
-            values: {"light": TestEnum.light, "dark": TestEnum.dark},
-            caseSensitive: false,
-          ).field(),
+          Field.enumeration("side", values: {"light": TestEnum.light, "dark": TestEnum.dark}, caseSensitive: false),
         ],
         constructor: (data) => data,
       );
@@ -63,9 +55,9 @@ void main() {
     });
 
     test("validates enum values", () {
-      final schema = Schema<Map<String, dynamic>>(
+      final schema = Schema(
         fields: [
-          Field.enumeration<TestEnum>("side", values: {"light": TestEnum.light, "dark": TestEnum.dark}).field(),
+          Field.enumeration("side", values: {"light": TestEnum.light, "dark": TestEnum.dark}),
         ],
         constructor: (data) => data,
       );
@@ -74,7 +66,7 @@ void main() {
       final invalidData = {"side": "unknown"};
 
       expect(schema.fromJson(validData)["side"], equals(TestEnum.light));
-      expect(() => schema.fromJson(invalidData), throwsA(TypeMatcher<ValueValidationException>()));
+      expect(() => schema.fromJson(invalidData), throwsA(TypeMatcher<ValidationException>()));
     });
   });
 }

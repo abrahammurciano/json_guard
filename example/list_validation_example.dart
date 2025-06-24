@@ -6,8 +6,8 @@ class Weapon {
 
   Weapon({required this.name, required this.damage});
 
-  static final schema = Schema<Weapon>(
-    fields: [Field.string("name").field(), Field.integer("damage", min: 1).field()],
+  static final schema = Schema(
+    fields: [Field.string("name"), Field.integer("damage", min: 1)],
     constructor: (data) => Weapon(name: data["name"], damage: data["damage"]),
   );
 
@@ -23,12 +23,12 @@ class Starship {
 
   Starship({required this.model, required this.crewSize, required this.systems, required this.weapons});
 
-  static final schema = Schema<Starship>(
+  static final schema = Schema(
     fields: [
-      Field.string("model").field(),
-      Field.integer("crewSize", min: 1).field(),
-      Field.string("systems").list(fallback: ["Basic"]).field(),
-      Field.nested("weapons", schema: Weapon.schema).list().field(),
+      Field.string("model"),
+      Field.integer("crewSize", min: 1),
+      Field.string("systems").list(fallback: ["Basic"]),
+      Field.nested("weapons", schema: Weapon.schema).list(),
     ],
     constructor: (data) {
       return Starship(
@@ -78,6 +78,6 @@ void main() {
     Starship.schema.fromJson(invalidStarship);
   } catch (e) {
     print("$e");
-    // Field 'damage': Validation failed for value '-5': Must be at least 1 (at $.weapons[0].damage)
+    // Validation error at $.weapons[0].damage (value: -5, type: int): Must be at least 1
   }
 }

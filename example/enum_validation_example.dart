@@ -11,17 +11,17 @@ class ForceUser {
 
   ForceUser({required this.name, required this.side, required this.saberColor});
 
-  static final schema = Schema<ForceUser>(
+  static final schema = Schema(
     fields: [
-      Field.string("name").field(),
-      Field.enumeration<ForceSide>("side", values: ForceSide.values.asNameMap(), caseSensitive: false).field(),
-      Field.enumeration<LightsaberColor>(
+      Field.string("name"),
+      Field.enumeration("side", values: ForceSide.values.asNameMap(), caseSensitive: false),
+      Field.enumeration(
         "lightsaber",
         aliases: ["color", "bladeColor"],
         values: {for (final color in LightsaberColor.values) color.name.toUpperCase(): color},
         caseSensitive: true,
         fallback: LightsaberColor.blue,
-      ).field(),
+      ),
     ],
     constructor: (data) => ForceUser(name: data["name"], side: data["side"], saberColor: data["lightsaber"]),
   );
@@ -60,7 +60,7 @@ void main() {
     ForceUser.schema.fromJson(invalidJson);
   } catch (e) {
     print("$e");
-    // Field 'lightsaber': Validation failed for value 'green': Expected one of: BLUE, GREEN, RED, PURPLE, YELLOW, WHITE, BLACK (at $.lightsaber)
+    // Validation error at $.lightsaber (value: green, type: String): Expected one of: BLUE, GREEN, RED, PURPLE, YELLOW, WHITE, BLACK
   }
 
   // Using fallback value for missing lightsaber

@@ -13,8 +13,8 @@ class NamingPattern {
   // Define a schema for a naming pattern
   static final schema = Schema(
     fields: [
-      Field.string("name").field(),
-      Field.pattern("regex", full: true, fallback: RegExp(r"[a-zA-Z][a-zA-Z0-9_]*")).field(),
+      Field.string("name"),
+      Field.pattern("regex", full: true, fallback: RegExp(r"[a-zA-Z][a-zA-Z0-9_]*")),
     ],
     constructor: (data) => NamingPattern(name: data["name"], regex: data["regex"]),
   );
@@ -29,8 +29,8 @@ class ValidationRules {
   // Define a schema for validation rules
   static final schema = Schema(
     fields: [
-      Field.nested("identifierPattern", schema: NamingPattern.schema).field(),
-      Field.nested("variablePattern", schema: NamingPattern.schema).optional().field(),
+      Field.nested("identifierPattern", schema: NamingPattern.schema),
+      Field.nested("variablePattern", schema: NamingPattern.schema).optional(),
     ],
     constructor: (data) {
       return ValidationRules(identifierPattern: data["identifierPattern"], variablePattern: data["variablePattern"]);

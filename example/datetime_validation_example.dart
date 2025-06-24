@@ -6,10 +6,10 @@ class Movie {
 
   Movie({required this.name, required this.releaseDate});
 
-  static final schema = Schema<Movie>(
+  static final schema = Schema(
     fields: [
-      Field.string("name").field(),
-      Field.datetime("releaseDate", min: DateTime(1977), max: DateTime.now()).field(),
+      Field.string("name"),
+      Field.datetime("releaseDate", min: DateTime(1977), max: DateTime.now()),
     ],
     constructor: (data) => Movie(name: data["name"], releaseDate: data["releaseDate"]),
   );
@@ -40,6 +40,6 @@ void main() {
     Movie.schema.fromJson(invalidMovie);
   } catch (e) {
     print("$e");
-    // Field 'releaseDate': Validation failed for value '1960-01-01T00:00:00Z': Date must be at or after 1977-01-01 00:00:00.000 (at $.releaseDate)
+    // Validation error at $.releaseDate (value: 1960-01-01T00:00:00Z, type: String): Date must be at or after 1977-01-01 00:00:00.000
   }
 }

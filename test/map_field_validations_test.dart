@@ -1,13 +1,10 @@
-import "package:json_guard/json_guard.dart" show Field, Schema, ValueValidationException, JsonTypeException;
+import "package:json_guard/json_guard.dart" show Field, Schema, ValidationException;
 import "package:test/test.dart" show TypeMatcher, equals, expect, group, isNull, test, throwsA;
 
 void main() {
   group("Map field validations", () {
     test("validates maps of primitives", () {
-      final schema = Schema<Map<String, dynamic>>(
-        fields: [Field.string("name").field(), Field.integer("scores").map().field()],
-        constructor: (data) => data,
-      );
+      final schema = Schema(fields: [Field.string("name"), Field.integer("scores").map()], constructor: (data) => data);
 
       final data = {
         "name": "Skills Assessment",
@@ -22,15 +19,12 @@ void main() {
     });
 
     test("validates maps of complex objects", () {
-      final characterSchema = Schema<Map<String, dynamic>>(
-        fields: [Field.string("name").field(), Field.integer("age").field()],
-        constructor: (data) => data,
-      );
+      final characterSchema = Schema(fields: [Field.string("name"), Field.integer("age")], constructor: (data) => data);
 
-      final schema = Schema<Map<String, dynamic>>(
+      final schema = Schema(
         fields: [
-          Field.string("faction").field(),
-          Field.nested("members", schema: characterSchema).map().field(),
+          Field.string("faction"),
+          Field.nested("members", schema: characterSchema).map(),
         ],
         constructor: (data) => data,
       );
@@ -52,8 +46,8 @@ void main() {
     });
 
     test("validates map value constraints", () {
-      final schema = Schema<Map<String, dynamic>>(
-        fields: [Field.string("name").field(), Field.integer("scores", min: 0, max: 100).map().field()],
+      final schema = Schema(
+        fields: [Field.string("name"), Field.integer("scores", min: 0, max: 100).map()],
         constructor: (data) => data,
       );
 
@@ -71,12 +65,12 @@ void main() {
       };
 
       expect(schema.fromJson(validData)["scores"]["piloting"], equals(90));
-      expect(() => schema.fromJson(invalidData), throwsA(TypeMatcher<ValueValidationException>()));
+      expect(() => schema.fromJson(invalidData), throwsA(TypeMatcher<ValidationException>()));
     });
 
     test("processes maps using Schema.map", () {
-      final pilotSchema = Schema<Map<String, dynamic>>(
-        fields: [Field.string("name").field(), Field.integer("skillLevel").field()],
+      final pilotSchema = Schema(
+        fields: [Field.string("name"), Field.integer("skillLevel")],
         constructor: (data) => data,
       );
 
@@ -94,17 +88,17 @@ void main() {
       expect(pilots["black_leader"]!["name"], equals("Poe Dameron"));
     });
 
-    test("throws JsonTypeException when Schema.map receives non-map input", () {
-      final schema = Schema<Map<String, dynamic>>(fields: [Field.string("name").field()], constructor: (data) => data);
+    test("throw when Schema.map receives non-map input", () {
+      final schema = Schema(fields: [Field.string("name")], constructor: (data) => data);
 
       final invalidInput = ["this is", "not a", "map"];
 
-      expect(() => schema.map(invalidInput), throwsA(TypeMatcher<JsonTypeException>()));
+      expect(() => schema.map(invalidInput), throwsA(TypeMatcher<ValidationException>()));
     });
 
     test("handles optional map fields", () {
-      final schema = Schema<Map<String, dynamic>>(
-        fields: [Field.string("name").field(), Field.string("aliases").map().optional().field()],
+      final schema = Schema(
+        fields: [Field.string("name"), Field.string("aliases").map().optional()],
         constructor: (data) => data,
       );
 
@@ -125,8 +119,8 @@ void main() {
     test("uses fallback for map fields", () {
       final fallbackMap = {"default": "value", "standard": "setting"};
 
-      final schema = Schema<Map<String, dynamic>>(
-        fields: [Field.string("settings").map(fallback: fallbackMap).field()],
+      final schema = Schema(
+        fields: [Field.string("settings").map(fallback: fallbackMap)],
         constructor: (data) => data,
       );
 

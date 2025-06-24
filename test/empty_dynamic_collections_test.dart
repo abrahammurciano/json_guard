@@ -7,8 +7,8 @@ void main() {
   group("Empty dynamic collections", () {
     group("Schema.fromJson with empty dynamic map", () {
       test("accepts empty dynamic map for fromJson", () {
-        final schema = Schema<Map<String, dynamic>>(
-          fields: [Field.string("name").optional().field(), Field.integer("age").optional().field()],
+        final schema = Schema(
+          fields: [Field.string("name").optional(), Field.integer("age").optional()],
           constructor: (data) => data,
         );
 
@@ -21,8 +21,8 @@ void main() {
 
     group("Schema.list with empty dynamic list", () {
       test("accepts empty dynamic list for list", () {
-        final schema = Schema<TestModel>(
-          fields: [Field.string("name").field(), Field.integer("age").field()],
+        final schema = Schema(
+          fields: [Field.string("name"), Field.integer("age")],
           constructor: (data) => TestModel(name: data["name"], age: data["age"]),
         );
 
@@ -35,8 +35,8 @@ void main() {
 
     group("Schema.map with empty dynamic map", () {
       test("accepts empty dynamic map for map", () {
-        final schema = Schema<TestModel>(
-          fields: [Field.string("name").field(), Field.integer("age").field()],
+        final schema = Schema(
+          fields: [Field.string("name"), Field.integer("age")],
           constructor: (data) => TestModel(name: data["name"], age: data["age"]),
         );
 
@@ -49,8 +49,8 @@ void main() {
 
     group("Field list type with empty dynamic list", () {
       test("accepts empty dynamic list for list field", () {
-        final schema = Schema<Map<String, dynamic>>(
-          fields: [Field.string("name").field(), Field.string("powers").list().field()],
+        final schema = Schema(
+          fields: [Field.string("name"), Field.string("powers").list()],
           constructor: (data) => data,
         );
 
@@ -64,8 +64,8 @@ void main() {
 
     group("Field map type with empty dynamic map", () {
       test("accepts empty dynamic map for map field", () {
-        final schema = Schema<Map<String, dynamic>>(
-          fields: [Field.string("name").field(), Field.integer("scores").map().field()],
+        final schema = Schema(
+          fields: [Field.string("name"), Field.integer("scores").map()],
           constructor: (data) => data,
         );
 
@@ -79,15 +79,15 @@ void main() {
 
     group("Nested schemas with empty dynamic collections", () {
       test("accepts nested empty dynamic map in list", () {
-        final characterSchema = Schema<Map<String, dynamic>>(
-          fields: [Field.string("name").optional().field(), Field.integer("age").optional().field()],
+        final characterSchema = Schema(
+          fields: [Field.string("name").optional(), Field.integer("age").optional()],
           constructor: (data) => data,
         );
 
-        final schema = Schema<Map<String, dynamic>>(
+        final schema = Schema(
           fields: [
-            Field.string("faction").field(),
-            Field.nested("members", schema: characterSchema).list().field(),
+            Field.string("faction"),
+            Field.nested("members", schema: characterSchema).list(),
           ],
           constructor: (data) => data,
         );
@@ -108,15 +108,15 @@ void main() {
       });
 
       test("accepts nested empty dynamic list in map", () {
-        final weaponsSchema = Schema<Map<String, dynamic>>(
-          fields: [Field.string("name").field(), Field.string("type").list().field()],
+        final weaponsSchema = Schema(
+          fields: [Field.string("name"), Field.string("type").list()],
           constructor: (data) => data,
         );
 
-        final schema = Schema<Map<String, dynamic>>(
+        final schema = Schema(
           fields: [
-            Field.string("name").field(),
-            Field.nested("arsenal", schema: weaponsSchema).map().field(),
+            Field.string("name"),
+            Field.nested("arsenal", schema: weaponsSchema).map(),
           ],
           constructor: (data) => data,
         );

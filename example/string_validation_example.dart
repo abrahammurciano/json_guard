@@ -9,12 +9,12 @@ class Planet {
 
   Planet({required this.name, required this.sector, required this.climate, required this.terrain});
 
-  static final schema = Schema<Planet>(
+  static final schema = Schema(
     fields: [
-      Field.string("name", minLength: 3, maxLength: 30, trim: true).field(),
-      Field.string("sector", pattern: RegExp(r"^[a-zA-Z0-9\- ]+$"), caseType: StringCase.upper).field(),
-      Field.string("climate", options: {"temperate", "tropical", "arid", "frozen", "hot"}).field(),
-      Field.string("terrain", aliases: ["surface", "geography"], fallback: "unknown").field(),
+      Field.string("name", minLength: 3, maxLength: 30, trim: true),
+      Field.string("sector", pattern: RegExp(r"^[a-zA-Z0-9\- ]+$"), caseType: StringCase.upper),
+      Field.string("climate", options: {"temperate", "tropical", "arid", "frozen", "hot"}),
+      Field.string("terrain", aliases: ["surface", "geography"], fallback: "unknown"),
     ],
     constructor: (data) {
       return Planet(name: data["name"], sector: data["sector"], climate: data["climate"], terrain: data["terrain"]);
@@ -57,6 +57,6 @@ void main() {
     Planet.schema.fromJson(invalidPlanet);
   } catch (e) {
     print("$e");
-    // Field 'climate': Validation failed for value 'volcanic': String must be one of: temperate, tropical, arid, frozen, hot (at $.climate)
+    // Validation error at $.climate (value: volcanic, type: String): String must be one of: temperate, tropical, arid, frozen, hot
   }
 }
