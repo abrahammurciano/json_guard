@@ -1,18 +1,15 @@
-import "package:json_guard/json_guard.dart" show Field, Schema, ValueValidationException;
+import "package:json_guard/json_guard.dart" show Field, Schema, ValidationException;
 import "package:test/test.dart" show TypeMatcher, equals, expect, group, test, throwsA;
 
 void main() {
   group("Nested schema validations", () {
     test("validates nested objects", () {
-      final locationSchema = Schema<Map<String, dynamic>>(
-        fields: [Field.integer("x").field(), Field.integer("y").field()],
-        constructor: (data) => data,
-      );
+      final locationSchema = Schema(fields: [Field.integer("x"), Field.integer("y")], constructor: (data) => data);
 
-      final schema = Schema<Map<String, dynamic>>(
+      final schema = Schema(
         fields: [
-          Field.string("name").field(),
-          Field.nested("location", schema: locationSchema).field(),
+          Field.string("name"),
+          Field.nested("location", schema: locationSchema),
         ],
         constructor: (data) => data,
       );
@@ -29,15 +26,15 @@ void main() {
     });
 
     test("validates nested object constraints", () {
-      final locationSchema = Schema<Map<String, dynamic>>(
-        fields: [Field.integer("x", min: 0).field(), Field.integer("y", min: 0).field()],
+      final locationSchema = Schema(
+        fields: [Field.integer("x", min: 0), Field.integer("y", min: 0)],
         constructor: (data) => data,
       );
 
-      final schema = Schema<Map<String, dynamic>>(
+      final schema = Schema(
         fields: [
-          Field.string("name").field(),
-          Field.nested("location", schema: locationSchema).field(),
+          Field.string("name"),
+          Field.nested("location", schema: locationSchema),
         ],
         constructor: (data) => data,
       );
@@ -56,28 +53,25 @@ void main() {
       };
 
       expect(schema.fromJson(validData)["location"]["x"], equals(10));
-      expect(() => schema.fromJson(invalidData), throwsA(TypeMatcher<ValueValidationException>()));
+      expect(() => schema.fromJson(invalidData), throwsA(TypeMatcher<ValidationException>()));
     });
 
     test("handles deeply nested objects", () {
-      final coordinateSchema = Schema<Map<String, dynamic>>(
-        fields: [Field.integer("x").field(), Field.integer("y").field()],
-        constructor: (data) => data,
-      );
+      final coordinateSchema = Schema(fields: [Field.integer("x"), Field.integer("y")], constructor: (data) => data);
 
-      final sectorSchema = Schema<Map<String, dynamic>>(
+      final sectorSchema = Schema(
         fields: [
-          Field.string("name").field(),
-          Field.nested("center", schema: coordinateSchema).field(),
+          Field.string("name"),
+          Field.nested("center", schema: coordinateSchema),
         ],
         constructor: (data) => data,
       );
 
-      final systemSchema = Schema<Map<String, dynamic>>(
+      final systemSchema = Schema(
         fields: [
-          Field.string("name").field(),
-          Field.integer("planets").field(),
-          Field.nested("sector", schema: sectorSchema).field(),
+          Field.string("name"),
+          Field.integer("planets"),
+          Field.nested("sector", schema: sectorSchema),
         ],
         constructor: (data) => data,
       );

@@ -4,8 +4,8 @@ import "package:test/test.dart" show equals, expect, group, isNull, test;
 void main() {
   group("Optional fields and fallbacks", () {
     test("handles optional fields", () {
-      final schema = Schema<Map<String, dynamic>>(
-        fields: [Field.string("name").field(), Field.string("title").optional().field()],
+      final schema = Schema(
+        fields: [Field.string("name"), Field.string("title").optional()],
         constructor: (data) => data,
       );
 
@@ -23,11 +23,11 @@ void main() {
     });
 
     test("uses fallback values", () {
-      final schema = Schema<Map<String, dynamic>>(
+      final schema = Schema(
         fields: [
-          Field.string("name").field(),
-          Field.string("species", fallback: "Human").field(),
-          Field.integer("age", fallback: 30).field(),
+          Field.string("name"),
+          Field.string("species", fallback: "Human"),
+          Field.integer("age", fallback: 30),
         ],
         constructor: (data) => data,
       );
@@ -41,10 +41,10 @@ void main() {
     });
 
     test("uses aliases with fallbacks", () {
-      final schema = Schema<Map<String, dynamic>>(
+      final schema = Schema(
         fields: [
-          Field.string("name", aliases: ["fullName"]).field(),
-          Field.string("species", aliases: ["race"], fallback: "Human").field(),
+          Field.string("name", aliases: ["fullName"]),
+          Field.string("species", aliases: ["race"], fallback: "Human"),
         ],
         constructor: (data) => data,
       );

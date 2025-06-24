@@ -22,11 +22,11 @@ class Character {
   Character({required this.name, required this.species, this.age});
 
   // 2. Define the schema
-  static final schema = Schema<Character>(
+  static final schema = Schema(
     fields: [
-      Field.string("name").field(),
-      Field.string("species", fallback: "Unknown").field(),
-      Field.integer("age").optional().field(),
+      Field.string("name"),
+      Field.string("species", fallback: "Unknown"),
+      Field.integer("age").optional(),
     ],
     constructor: (data) => Character(
       name: data["name"],
@@ -59,7 +59,7 @@ Field.string(
   trim: true,         // Trim whitespace
   options: {"a", "b"}, // Allowed values
   fallback: "default", // Default value if missing
-).field()
+)
 ```
 
 ### Integer Fields
@@ -70,7 +70,7 @@ Field.integer(
   min: 0,            // Minimum value
   max: 120,          // Maximum value
   fallback: 18,      // Default value if missing
-).field()
+)
 ```
 
 ### DateTime Fields
@@ -83,7 +83,7 @@ Field.datetime(
   allowIso8601: true,  // Accept ISO8601 string format
   allowTimestamp: true, // Accept UNIX timestamp (seconds)
   fallback: DateTime(2000), // Default value if missing
-).field()
+)
 ```
 
 ### Enum Fields
@@ -96,7 +96,7 @@ Field.enumeration<Color>(
   values: Color.asNameMap(), // Map of enum values
   caseSensitive: false, // Case-insensitive matching
   fallback: Color.blue, // Default value if missing
-).field()
+)
 ```
 
 ### Nested Schema Fields
@@ -108,10 +108,10 @@ class Address {
   final int? number;
   Address({required this.street, this.number});
 
-  static final schema = Schema<Address>(
+  static final schema = Schema(
     fields: [
-      Field.string("street").field(),
-      Field.integer("number").optional().field(),
+      Field.string("street"),
+      Field.integer("number").optional(),
     ],
     constructor: (data) => Address(
       street: data["street"],
@@ -125,17 +125,17 @@ Field.nested(
   "address",
   schema: Address.schema, // The nested schema
   fallback: defaultAddress, // Optional default value
-).field()
+)
 ```
 
 ### List Fields
 
 ```dart
 // For a list of strings
-Field.string("tags").list().field()
+Field.string("tags").list()
 
 // For a list of nested objects
-Field.nested("items", schema: Item.schema).list().field()
+Field.nested("items", schema: Item.schema).list()
 ```
 
 ## Field Options
@@ -149,8 +149,8 @@ All field types support these options:
 - **map()**: Indicates that the field is a map of key-value pairs
 
 ```dart
-Field.string("name", aliases: ["fullName", "userName"]).field()
-Field.integer("score").optional().field() // Can be null
+Field.string("name", aliases: ["fullName", "userName"])
+Field.integer("score").optional() // Can be null
 ```
 
 ## Error Handling
@@ -160,9 +160,76 @@ JSON Guard throws descriptive exceptions when validation fails:
 ```dart
 try {
   final character = Character.schema.fromJson(jsonData);
-} catch (e) {
+} on ValidationException catch (e) {
   print("$e");
-  // e.g., "Field 'age': Validation failed for value '150': Value must be at most 120 (at $.age)"
+  // e.g., "Validation error at $.age (value: 150, type: int): Value must be at most 120"
+}
+```
+
+## Using the Validator Class
+
+The `Validator<T>` class is the core validation engine of the JSON Guard library. It handles:
+
+1. Converting raw JSON values to specific Dart types
+2. Validating that values meet constraints
+3. Handling missing fields with fallbacks
+4. Managing optional fields that may be null
+
+A `Validator<T>` is a self-contained object that can:
+- Take a raw JSON value as input
+- Validate and convert it to a type `T`
+- Throw a `ValidationException` if validation fails
+
+### Built-in Validator Types
+
+JSON Guard provides several built-in validator factory methods:
+
+```dart
+// Basic validators
+final intValidator = Validator.integer(min: 0, max: 100);
+final stringValidator = Validator.string(minLength: 3, maxLength: 50);
+final dateValidator = Validator.datetime(min: DateTime(2020));
+final regexValidator = Validator.pattern(caseSensitive: false);
+final enumValidator = Validator.enumeration<Status>(values: {'active': Status.active, 'inactive': Status.inactive});
+
+// For values that don't need conversion
+final boolValidator = Validator<bool>.plain();
+
+// For custom validation logic
+final urlValidator = Validator.custom<Uri, String>(
+  converter: (value, path) => Uri.parse(value),
+);
+```
+
+### Validator Transformations
+
+Validators can be transformed to handle different shapes of data:
+
+```dart
+// Optional validators accept null values
+final optionalInt = Validator.integer().optional();  // Validator<int?>
+
+// List validators validate each item in a list
+final stringList = Validator.string().list();  // Validator<List<String>>
+
+// Map validators validate each value in a map
+final stringMap = Validator.string().map();  // Validator<Map<String, String>>
+```
+
+### Using Validators Directly
+
+Validators can be used directly without involving Fields or Schemas:
+
+```dart
+final emailValidator = Validator.string(
+  pattern: RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$'),
+);
+
+try {
+  final validatedEmail = emailValidator.validate('user@example.com');
+  print('Email is valid: $validatedEmail');
+} on ValidationException catch (e) {
+  print('Invalid email: ${e.message}');
 }
 ```
 

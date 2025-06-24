@@ -7,11 +7,11 @@ class Character {
 
   Character({required this.name, required this.species, required this.age});
 
-  static final schema = Schema<Character>(
+  static final schema = Schema(
     fields: [
-      Field.string("name", minLength: 2).field(),
-      Field.string("species", fallback: "Unknown").field(),
-      Field.integer("age", min: 0, max: 1000).field(),
+      Field.string("name", minLength: 2),
+      Field.string("species", fallback: "Unknown"),
+      Field.integer("age", min: 0, max: 1000),
     ],
     constructor: (data) => Character(name: data["name"], species: data["species"], age: data["age"]),
   );

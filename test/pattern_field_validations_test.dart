@@ -1,14 +1,11 @@
-import "package:json_guard/json_guard.dart" show Field, Schema, ValueValidationException;
+import "package:json_guard/json_guard.dart" show Field, Schema, ValidationException;
 import "package:test/test.dart"
     show TypeMatcher, contains, equals, expect, fail, group, isA, isTrue, isFalse, test, throwsA;
 
 void main() {
   group("Pattern field validations", () {
     test("converts string to RegExp", () {
-      final schema = Schema<Map<String, dynamic>>(
-        fields: [Field.string("name").field(), Field.pattern("idPattern").field()],
-        constructor: (data) => data,
-      );
+      final schema = Schema(fields: [Field.string("name"), Field.pattern("idPattern")], constructor: (data) => data);
 
       final data = {"name": "ID Validation Rule", "idPattern": "[A-Z]{2}\\d{6}"};
 
@@ -23,10 +20,7 @@ void main() {
     });
 
     test("supports 'full' flag to anchor patterns", () {
-      final schema = Schema<Map<String, dynamic>>(
-        fields: [Field.pattern("pattern", full: true).field()],
-        constructor: (data) => data,
-      );
+      final schema = Schema(fields: [Field.pattern("pattern", full: true)], constructor: (data) => data);
 
       final data = {"pattern": "[a-z]+"};
 
@@ -40,11 +34,11 @@ void main() {
     });
 
     test("recognizes existing anchors when full flag is true", () {
-      final schema = Schema<Map<String, dynamic>>(
+      final schema = Schema(
         fields: [
-          Field.pattern("startPattern", full: true).field(),
-          Field.pattern("endPattern", full: true).field(),
-          Field.pattern("fullPattern", full: true).field(),
+          Field.pattern("startPattern", full: true),
+          Field.pattern("endPattern", full: true),
+          Field.pattern("fullPattern", full: true),
         ],
         constructor: (data) => data,
       );
@@ -60,8 +54,8 @@ void main() {
     });
 
     test("configures RegExp options", () {
-      final schema = Schema<Map<String, dynamic>>(
-        fields: [Field.pattern("pattern", multiLine: true, caseSensitive: false, unicode: true).field()],
+      final schema = Schema(
+        fields: [Field.pattern("pattern", multiLine: true, caseSensitive: false, unicode: true)],
         constructor: (data) => data,
       );
 
@@ -80,8 +74,8 @@ void main() {
 
     test("uses fallback when field is missing", () {
       final fallbackPattern = RegExp(r"[a-z][A-Z]+");
-      final schema = Schema<Map<String, dynamic>>(
-        fields: [Field.pattern("pattern", fallback: fallbackPattern).field()],
+      final schema = Schema(
+        fields: [Field.pattern("pattern", fallback: fallbackPattern)],
         constructor: (data) => data,
       );
 
@@ -95,31 +89,25 @@ void main() {
       expect(result["pattern"].hasMatch("ABC"), isFalse);
     });
 
-    test("throws ValueValidationException on invalid pattern", () {
-      final schema = Schema<Map<String, dynamic>>(
-        fields: [Field.pattern("pattern").field()],
-        constructor: (data) => data,
-      );
+    test("throws ValidationException on invalid pattern", () {
+      final schema = Schema(fields: [Field.pattern("pattern")], constructor: (data) => data);
 
       final invalidData = {"pattern": "["}; // Unclosed bracket - invalid regex
 
-      expect(() => schema.fromJson(invalidData), throwsA(TypeMatcher<ValueValidationException>()));
+      expect(() => schema.fromJson(invalidData), throwsA(TypeMatcher<ValidationException>()));
     });
 
     test("provides error message on invalid pattern", () {
-      final schema = Schema<Map<String, dynamic>>(
-        fields: [Field.pattern("pattern").field()],
-        constructor: (data) => data,
-      );
+      final schema = Schema(fields: [Field.pattern("pattern")], constructor: (data) => data);
 
       final invalidData = {"pattern": "["}; // Unclosed bracket - invalid regex
 
       try {
         schema.fromJson(invalidData);
-        fail("Expected ValueValidationException was not thrown");
+        fail("Expected ValidationException was not thrown");
       } catch (e) {
-        expect(e, isA<ValueValidationException>());
-        expect((e as ValueValidationException).message, contains("Invalid regular expression"));
+        expect(e, isA<ValidationException>());
+        expect((e as ValidationException).message, contains("Invalid regular expression"));
       }
     });
   });

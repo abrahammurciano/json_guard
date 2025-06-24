@@ -1,4 +1,4 @@
-import "package:json_guard/json_guard.dart" show Field, Schema, FieldMissingException, ArgumentErrorValidationException;
+import "package:json_guard/json_guard.dart" show Field, Schema, ValidationException;
 import "package:test/test.dart" show TypeMatcher, equals, expect, group, test, throwsA;
 
 import "test_utils.dart" show TestModel;
@@ -6,8 +6,8 @@ import "test_utils.dart" show TestModel;
 void main() {
   group("Schema validations", () {
     test("validates basic types", () {
-      final schema = Schema<TestModel>(
-        fields: [Field.string("name").field(), Field.integer("age").field()],
+      final schema = Schema(
+        fields: [Field.string("name"), Field.integer("age")],
         constructor: (data) => TestModel(name: data["name"], age: data["age"]),
       );
 
@@ -19,19 +19,19 @@ void main() {
     });
 
     test("throws on missing fields", () {
-      final schema = Schema<TestModel>(
-        fields: [Field.string("name").field(), Field.integer("age").field()],
+      final schema = Schema(
+        fields: [Field.string("name"), Field.integer("age")],
         constructor: (data) => TestModel(name: data["name"], age: data["age"]),
       );
 
       final data = {"name": "Luke Skywalker"};
 
-      expect(() => schema.fromJson(data), throwsA(TypeMatcher<FieldMissingException>()));
+      expect(() => schema.fromJson(data), throwsA(TypeMatcher<ValidationException>()));
     });
 
     test("uses field fallbacks", () {
-      final schema = Schema<TestModel>(
-        fields: [Field.string("name").field(), Field.integer("age", fallback: 20).field()],
+      final schema = Schema(
+        fields: [Field.string("name"), Field.integer("age", fallback: 20)],
         constructor: (data) => TestModel(name: data["name"], age: data["age"]),
       );
 
@@ -43,10 +43,10 @@ void main() {
     });
 
     test("uses field aliases", () {
-      final schema = Schema<TestModel>(
+      final schema = Schema(
         fields: [
-          Field.string("name", aliases: ["fullName", "characterName"]).field(),
-          Field.integer("age", aliases: ["years"]).field(),
+          Field.string("name", aliases: ["fullName", "characterName"]),
+          Field.integer("age", aliases: ["years"]),
         ],
         constructor: (data) => TestModel(name: data["name"], age: data["age"]),
       );
@@ -58,9 +58,9 @@ void main() {
       expect(result.age, equals(23));
     });
 
-    test("catches ArgumentError in constructor and throws ArgumentErrorValidationException", () {
-      final schema = Schema<TestModel>(
-        fields: [Field.string("name").field(), Field.integer("age").field()],
+    test("catches ArgumentError in constructor and throws ValidationException", () {
+      final schema = Schema(
+        fields: [Field.string("name"), Field.integer("age")],
         constructor: (data) {
           final age = data["age"] as int;
           if (age < 0) {
@@ -74,7 +74,7 @@ void main() {
       final invalidData = {"name": "Luke Skywalker", "age": -5};
 
       expect(schema.fromJson(validData).age, equals(23));
-      expect(() => schema.fromJson(invalidData), throwsA(TypeMatcher<ArgumentErrorValidationException>()));
+      expect(() => schema.fromJson(invalidData), throwsA(TypeMatcher<ValidationException>()));
     });
   });
 }

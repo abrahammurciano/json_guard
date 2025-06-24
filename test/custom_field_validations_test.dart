@@ -1,12 +1,12 @@
-import "package:json_guard/json_guard.dart" show Field, Schema, ArgumentErrorValidationException;
+import "package:json_guard/json_guard.dart" show Field, Schema, ValidationException;
 import "package:test/test.dart" show TypeMatcher, equals, expect, group, test, throwsA;
 
 void main() {
   group("Custom field validations", () {
     test("applies custom conversion logic", () {
-      final schema = Schema<Map<String, dynamic>>(
+      final schema = Schema(
         fields: [
-          Field.string("name").field(),
+          Field.string("name"),
           Field.custom<int, String>(
             "code",
             converter: (value) {
@@ -15,7 +15,7 @@ void main() {
               }
               return int.parse(value.substring(3));
             },
-          ).field(),
+          ),
         ],
         constructor: (data) => data,
       );
@@ -24,7 +24,7 @@ void main() {
       final invalidData = {"name": "Luke Skywalker", "code": "ABC-123"};
 
       expect(schema.fromJson(validData)["code"], equals(123));
-      expect(() => schema.fromJson(invalidData), throwsA(TypeMatcher<ArgumentErrorValidationException>()));
+      expect(() => schema.fromJson(invalidData), throwsA(TypeMatcher<ValidationException>()));
     });
   });
 }
